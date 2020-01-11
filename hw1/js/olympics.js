@@ -13,16 +13,25 @@ var svg = d3.select("#viz")
         "translate(" + margin.left + "," + margin.top + ")");
 
 //Read the data
-d3.csv("data/olympics_5.csv", function(d) {
+d3.tsv("data/olympics_series.tsv", function(data) {
+    series = [];
+    for (var year in data)
+    {
+        if (year === 'index') continue;
+        series.push({
+                        year: new Date(year),
+                        value: +data[year]
+                   });
+    }
     return {
-        Year: new Date(d.Year),
-        gold_count: +d.gold_count,
-    };
-  })
-  .then(function(data) {
+        country: data['index'],
+        series: series,
+        };
+    }).then(function(data) {
+    
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
-      .domain(d3.extent(data, function(d) { return d.Year; }))
+      .domain(d3.extent(data[0].series, function(d) { return d.year; }))
       .range([ 0, width ]);
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -30,17 +39,20 @@ d3.csv("data/olympics_5.csv", function(d) {
     
     // Add Y axis
     var y = d3.scaleLinear()
-      .domain([0, d3.max(data, function(d) { return d.gold_count; })])
-      .range([ height, 0 ]);
+      .domain([0, 1])
+      .range([ height, 0 ]); 
     svg.append("g")
       .call(d3.axisLeft(y));
-
-    svg.append("path").datum(data)
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1.5)
-      .attr("d", d3.line()
-        .x(function(d) { return x(d.Year) })
-        .y(function(d) { return y(d.gold_count) })
-        );
+    
+    data.forEach(function(d) {
+        svg.append("path").datum(d.series)
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr("id", d.country)
+          .attr("d", d3.line()  
+            .x(function(d) { return x(d.year); })
+            .y(function(d) { return y(d.value); })
+            );
+    });
 });
