@@ -45,14 +45,27 @@ d3.tsv("data/olympics_series.tsv", function(data) {
       .call(d3.axisLeft(y));
     
     data.forEach(function(d) {
+        var country = d.country;
         svg.append("path").datum(d.series)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
           .attr("stroke-width", 1.5)
-          .attr("id", d.country)
+          .attr("id", country)
+          .attr("class", "seriesLine")
           .attr("d", d3.line()  
             .x(function(d) { return x(d.year); })
             .y(function(d) { return y(d.value); })
-            );
+            )
+          .on("mouseover", function(d) {
+              d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray");
+              d3.select(this).attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 2.0)
+                .style('mix-blend-mode', "multiply");
+              d3.select("#country").append('text').style("font", "10px sans-serif").text(country);
+            })
+          .on("mouseout", function(d) {
+              d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 1.5)
+                .style('mix-blend-mode', null);
+              d3.select("#country text").remove();
+            });
     });
 });
