@@ -1,7 +1,8 @@
 // set the dimensions and margins of the graph
+var mult = 1.4;
 var margin = {top: 10, right: 30, bottom: 30, left: 60},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = mult*460 - margin.left - margin.right,
+    height = mult*400 - margin.top - margin.bottom;
 
 // append the svg object to the body of the page
 var svg = d3.select("#viz")
@@ -39,14 +40,14 @@ d3.tsv("data/olympics_series.tsv", function(data) {
     
     // Add Y axis
     var y = d3.scaleLinear()
-      .domain([0, 1])
-      .range([ height, 0 ]); 
+      .domain(d3.extent(data[0].series, function(d) { return d.value; }))
+      .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(y));
     
     data.forEach(function(d) {
         var country = d.country;
-        svg.append("path").datum(d.series)
+        var path = svg.append("path").datum(d.series)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
           .attr("stroke-width", 1.5)
@@ -56,16 +57,53 @@ d3.tsv("data/olympics_series.tsv", function(data) {
             .x(function(d) { return x(d.year); })
             .y(function(d) { return y(d.value); })
             )
-          .on("mouseover", function(d) {
-              d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray");
-              d3.select(this).attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 2.0)
-                .style('mix-blend-mode', "multiply");
-              d3.select("#country").append('text').style("font", "10px sans-serif").text(country);
-            })
-          .on("mouseout", function(d) {
-              d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 1.5)
-                .style('mix-blend-mode', null);
-              d3.select("#country text").remove();
-            });
+          .style('mix-blend-mode', "multiply");
     });
+    
+    svg.style("position", "relative");
+  
+    d3.select("#viz svg").on("mouseenter", entered)
+       .on("mousemove", moved)
+       .on("mouseleave", left);
+
+    const dot = svg.append("g")
+      .attr("display", "none");
+
+    dot.append("circle")
+      .attr("r", 2.5);
+
+    dot.append("text")
+      .style("font", "10px sans-serif")
+      .attr("text-anchor", "middle")
+      .attr("y", -8);
+
+    var date_extent = [];
+    data[0].series.forEach(function (e) {date_extent.push(e.year)});
+    function moved() {
+        // When the mouse moves, find the closest point on one of the lines
+        // Illustrate a dot there and highlight the line.
+        d3.event.preventDefault();
+        const ym = y.invert(d3.event.layerY - margin.top);
+        const xm = x.invert(d3.event.layerX - margin.left);
+        const i1 = d3.bisectLeft(date_extent, xm);
+        const i0 = i1 - 1;
+        const i = Math.abs(xm - date_extent[i0]) > Math.abs(xm - date_extent[i1]) ? i1: i0;
+        const s = data.reduce(function(a, b){
+            return Math.abs(a.series[i].value - ym) < Math.abs(b.series[i].value - ym) ? a : b
+        });
+        dot.attr("transform", `translate(${x(data[0].series[i].year)},${y(s.series[i].value)})`);
+        dot.select("text").text(s.country);
+        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray");
+        d3.select("#" + s.country).attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 2.0)
+          .style('mix-blend-mode', "multiply");
+    }
+
+    function entered() {
+        dot.attr("display", null);
+    }
+
+    function left() {
+        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 1.5);
+        dot.attr("display", "none");
+    }
 });
