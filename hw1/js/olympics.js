@@ -1,6 +1,6 @@
 // set the dimensions and margins of the graph
 var mult = 1.4;
-var margin = {top: 10, right: 30, bottom: 30, left: 60},
+var margin = {top: 30, right: 30, bottom: 30, left: 60},
     width = mult*460 - margin.left - margin.right,
     height = mult*400 - margin.top - margin.bottom;
 
@@ -39,8 +39,10 @@ d3.tsv("data/olympics_series.tsv", function(data) {
       .call(d3.axisBottom(x));
     
     // Add Y axis
+    ymin = d3.min(data, function(d) { return d3.min(d.series, function(s) { return s.value }); });
+    ymax = d3.max(data, function(d) { return d3.max(d.series, function(s) { return s.value }); });
     var y = d3.scaleLinear()
-      .domain(d3.extent(data[0].series, function(d) { return d.value; }))
+      .domain([ ymin, ymax ])
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(y));
@@ -92,18 +94,20 @@ d3.tsv("data/olympics_series.tsv", function(data) {
             return Math.abs(a.series[i].value - ym) < Math.abs(b.series[i].value - ym) ? a : b
         });
         dot.attr("transform", `translate(${x(data[0].series[i].year)},${y(s.series[i].value)})`);
-        dot.select("text").text(s.country);
-        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray");
+        dot.select("text").text(s.country).style('background', 'white');
+        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray").style('mix-blend-mode', null);
         d3.select("#" + s.country).attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 2.0)
           .style('mix-blend-mode', "multiply");
     }
 
     function entered() {
+        d3.selectAll(".seriesLine").style('mix-blend-mode', null);
         dot.attr("display", null);
     }
 
     function left() {
-        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 1.5);
+        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 1.5)
+            .style('mix-blend-mode', "multiply");
         dot.attr("display", "none");
     }
 });
