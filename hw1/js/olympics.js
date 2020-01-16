@@ -1,6 +1,6 @@
 // set the dimensions and margins of the graph
 var mult = 1.4;
-var margin = {top: 30, right: 30, bottom: 30, left: 60},
+var margin = {top: 30, right: 30, bottom: 60, left: 60},
     width = mult*460 - margin.left - margin.right,
     height = mult*400 - margin.top - margin.bottom;
 
@@ -67,6 +67,19 @@ d3.tsv("data/olympics_series.tsv", function(data) {
             )
           .style('mix-blend-mode', "multiply");
     });
+    
+    // Add axis labels
+    var xAxisLabelX = x.range()[1] * 0.5
+    var xAxisLabelY = y(0) + 40;
+    var xAxisLabel = svg.append("g")
+        .attr("transform", `translate(${xAxisLabelX},${xAxisLabelY})`)
+        .append("text").text("Year").attr("class", "axis-label");
+    
+    var yAxisLabelX = -27;
+    var yAxisLabelY = y(1.0) - 10;
+    var yAxisLabel = svg.append("g")
+        .attr("transform", `translate(${yAxisLabelX},${yAxisLabelY})`)
+        .append("text").text("Goldiness").attr("class", "axis-label");
     
     // Add a legend
     // Usually you have a color scale in your chart already
