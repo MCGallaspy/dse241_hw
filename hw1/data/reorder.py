@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv('olympics_5.csv')
+df = pd.read_csv('olympics_top_5.csv')
 
 years = sorted(df.Year.value_counts().index)
 country_codes = sorted(df['Country Code'].value_counts().index)

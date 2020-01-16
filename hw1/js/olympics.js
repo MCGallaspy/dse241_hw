@@ -14,6 +14,9 @@ var svg = d3.select("#viz")
         "translate(" + margin.left + "," + margin.top + ")");
 
 //Read the data
+
+var n = -1;
+
 d3.tsv("data/olympics_series.tsv", function(data) {
     series = [];
     for (var year in data)
@@ -21,12 +24,14 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         if (year === 'index') continue;
         series.push({
                         year: new Date(year),
-                        value: +data[year]
+                        value: +data[year],
                    });
     }
+    n += 1;
     return {
         country: data['index'],
         series: series,
+        color_index: n,
         };
     }).then(function(data) {
     
@@ -51,7 +56,7 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         var country = d.country;
         var path = svg.append("path").datum(d.series)
           .attr("fill", "none")
-          .attr("stroke", "steelblue")
+          .attr("stroke", d3.schemeCategory10[d.color_index])
           .attr("stroke-width", 1.5)
           .attr("id", country)
           .attr("class", "seriesLine")
@@ -88,15 +93,17 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         const ym = y.invert(d3.event.layerY - margin.top);
         const xm = x.invert(d3.event.layerX - margin.left);
         const i1 = d3.bisectLeft(date_extent, xm);
-        const i0 = i1 - 1;
+        const i0 = Math.max(i1 - 1, 0);
+        console.log(i1, i0);
         const i = Math.abs(xm - date_extent[i0]) > Math.abs(xm - date_extent[i1]) ? i1: i0;
         const s = data.reduce(function(a, b){
             return Math.abs(a.series[i].value - ym) < Math.abs(b.series[i].value - ym) ? a : b
         });
         dot.attr("transform", `translate(${x(data[0].series[i].year)},${y(s.series[i].value)})`);
         dot.select("text").text(s.country).style('background', 'white');
-        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray").style('mix-blend-mode', null);
-        d3.select("#" + s.country).attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 2.0)
+        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray").style('mix-blend-mode', null)
+            .attr("stroke-width", 1.5);
+        d3.select("#" + s.country).attr("r", 10).style("stroke", d3.schemeCategory10[s.color_index]).attr("stroke-width", 2.0)
           .style('mix-blend-mode', "multiply");
     }
 
@@ -106,8 +113,11 @@ d3.tsv("data/olympics_series.tsv", function(data) {
     }
 
     function left() {
-        d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue").attr("stroke-width", 1.5)
-            .style('mix-blend-mode', "multiply");
+        data.forEach(function(d) {
+            d3.select("#" + d.country).style("stroke", d3.schemeCategory10[d.color_index])
+                .style('mix-blend-mode', "multiply").attr("stroke-width", 1.5);
+        });
+        //d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "steelblue")
         dot.attr("display", "none");
     }
 });
