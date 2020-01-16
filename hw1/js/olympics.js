@@ -156,8 +156,12 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         // dot.select("text").text(s.country).style('background', 'white');
         d3.selectAll(".seriesLine").attr("r", 10).style("stroke", "gray").style('mix-blend-mode', null)
             .attr("stroke-width", 1.5);
+        d3.selectAll(".legend-label").style("fill", "gray");
+        d3.selectAll(".legend-dot").style("fill", "gray");
         d3.select("#" + s.country).attr("r", 10).style("stroke", d3.schemeCategory10[s.color_index]).attr("stroke-width", 2.0)
           .style('mix-blend-mode', "multiply");
+        d3.selectAll(`#${s.country}-label`).style("fill", d3.schemeCategory10[s.color_index]);
+        d3.selectAll(`#${s.country}-dot`).style("fill", d3.schemeCategory10[s.color_index]);
     }
 
     function entered() {
@@ -169,6 +173,8 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         data.forEach(function(d) {
             d3.select("#" + d.country).style("stroke", d3.schemeCategory10[d.color_index])
                 .style('mix-blend-mode', "multiply").attr("stroke-width", 1.5);
+            d3.selectAll(`#${d.country}-label`).style("fill", d3.schemeCategory10[d.color_index]);
+            d3.selectAll(`#${d.country}-dot`).style("fill", d3.schemeCategory10[d.color_index]);
         });
         dot.attr("display", "none");
     }
