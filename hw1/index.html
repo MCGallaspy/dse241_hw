@@ -2,10 +2,29 @@
 <html>
 <head>
 <script src="https://d3js.org/d3.v5.min.js"></script>
+<style type="text/css">
+.chart-title {
+    width: 644px;
+    margin-left: 30px;
+}
+
+.chart-caption {
+    font: 12px serif;
+    margin: 0;
+    margin-left: 30px;
+    width: 644px;
+}
+
+.axis-label {
+    font: 14px serif;
+}
+</style>
 </head>
 <body>
+<h1 class="chart-title">Goldiness of top 5 Olympic medal winning countries over time</h1>
 <div id="viz"></div>
-<div id="country"></div>
+<p class="chart-caption">
+For the most part, the countries that win the most medals do not appear to limiting themselves to events where they maximize their chances at a Gold. The only countries that may demonstrate this behavior are Russia and Germany, with a median "Goldiness" of around 40% in the years where they achieved at least one Gold medal. Further research into segmenting this graph by sport or event may provide ample evidence to countries that select events to maximize their Goldiness scores.</p>
 <script type="text/javascript" src="js/olympics.js">
 </script>
 </body>
