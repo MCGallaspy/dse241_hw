@@ -17,8 +17,6 @@ var svg = d3.select("#viz")
 
 var n = -1;
 
-var colorScheme = d3.schemeCategory10;
-
 d3.tsv("data/olympics_series.tsv", function(data) {
     series = [];
     for (var year in data)
@@ -36,6 +34,10 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         color_index: n,
         };
     }).then(function(data) {
+    
+    var colorScheme = d3.scaleOrdinal(d3.schemeBrBG[n+1]);
+    //var colorScheme = d3.scaleOrdinal(d3.schemeSpectral[n+1]);
+    //var colorScheme = function(i) { return d3.schemeDark2[i]; };
     
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
@@ -59,7 +61,7 @@ d3.tsv("data/olympics_series.tsv", function(data) {
         countries.push(country);
         var path = svg.append("path").datum(d.series)
           .attr("fill", "none")
-          .attr("stroke", colorScheme[d.color_index])
+          .attr("stroke", colorScheme(d.color_index))
           .attr("stroke-width", 1.5)
           .attr("id", country)
           .attr("class", "seriesLine")
@@ -67,7 +69,8 @@ d3.tsv("data/olympics_series.tsv", function(data) {
             .x(function(d) { return x(d.year); })
             .y(function(d) { return y(d.value); })
             )
-          .style('mix-blend-mode', "multiply");
+          //.style('mix-blend-mode', "multiply");
+          .style('mix-blend-mode', null);
     });
     
     // Add axis labels
@@ -87,7 +90,7 @@ d3.tsv("data/olympics_series.tsv", function(data) {
     // Usually you have a color scale in your chart already
     var color = d3.scaleOrdinal()
       .domain(countries)
-      .range(colorScheme);
+      .range(colorScheme.range());
 
     var legendX = x.range()[1] * 0.8
     var legendY = y(0.9);
@@ -160,10 +163,11 @@ d3.tsv("data/olympics_series.tsv", function(data) {
             .attr("stroke-width", 1.5);
         d3.selectAll(".legend-label").style("fill", "gray");
         d3.selectAll(".legend-dot").style("fill", "gray");
-        d3.select("#" + s.country).attr("r", 10).style("stroke", colorScheme[s.color_index]).attr("stroke-width", 2.0)
-          .style('mix-blend-mode', "multiply");
-        d3.selectAll(`#${s.country}-label`).style("fill", colorScheme[s.color_index]);
-        d3.selectAll(`#${s.country}-dot`).style("fill", colorScheme[s.color_index]);
+        d3.select("#" + s.country).attr("r", 10).style("stroke", colorScheme(s.color_index)).attr("stroke-width", 2.0)
+          //.style('mix-blend-mode', "multiply");
+          .style('mix-blend-mode', null);
+        d3.selectAll(`#${s.country}-label`).style("fill", colorScheme(s.color_index));
+        d3.selectAll(`#${s.country}-dot`).style("fill", colorScheme(s.color_index));
     }
 
     function entered() {
@@ -173,10 +177,12 @@ d3.tsv("data/olympics_series.tsv", function(data) {
 
     function left() {
         data.forEach(function(d) {
-            d3.select("#" + d.country).style("stroke", colorScheme[d.color_index])
-                .style('mix-blend-mode', "multiply").attr("stroke-width", 1.5);
-            d3.selectAll(`#${d.country}-label`).style("fill", colorScheme[d.color_index]);
-            d3.selectAll(`#${d.country}-dot`).style("fill", colorScheme[d.color_index]);
+            d3.select("#" + d.country).style("stroke", colorScheme(d.color_index))
+                //.style('mix-blend-mode', "multiply")
+                .style('mix-blend-mode', null)
+                .attr("stroke-width", 1.5);
+            d3.selectAll(`#${d.country}-label`).style("fill", colorScheme(d.color_index));
+            d3.selectAll(`#${d.country}-dot`).style("fill", colorScheme(d.color_index));
         });
         dot.attr("display", "none");
     }
