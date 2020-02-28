@@ -1,0 +1,20 @@
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+
+.hed {
+  font-family: SourceSansPro-Bold;
+  font-size: 24pt;
+  margin-bottom:5px; 
+  margin-top:0px;
+  }
+  
+.dek {
+  font-family: SourceSansPro-Light;
+  font-size: 12pt;
+  margin-bottom:0px; 
+  margin-top:0px;
+  } 
+
