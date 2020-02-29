@@ -1,0 +1,25 @@
+<svg id="field" width="1300" height="633">
+<rect x="0" y="0" height="633" width="1300" style="fill: rgb(161, 195, 73);"></rect>
+<rect x="50" y="50" height="533" width="1200" style="stroke-width: 5; stroke: rgb(255, 255, 255); fill: rgb(161, 195, 73);"></rect>
+<rect x="50" y="50" height="533" width="100" style="stroke-width: 5; stroke: rgb(255, 255, 255); fill: none;"></rect>
+<rect x="1150" y="50" height="533" width="100" style="stroke-width: 5; stroke: rgb(255, 255, 255); fill: none;"></rect>
+<line x1="200" stroke-width="1px" stroke="#ffffff" y1="50" x2="200" y2="583"></line>
+<line x1="250" stroke-width="2px" stroke="#ffffff" y1="50" x2="250" y2="583"></line>
+<line x1="300" stroke-width="1px" stroke="#ffffff" y1="50" x2="300" y2="583"></line>
+<line x1="350" stroke-width="2px" stroke="#ffffff" y1="50" x2="350" y2="583"></line>
+<line x1="400" stroke-width="1px" stroke="#ffffff" y1="50" x2="400" y2="583"></line>
+<line x1="450" stroke-width="2px" stroke="#ffffff" y1="50" x2="450" y2="583"></line>
+<line x1="500" stroke-width="1px" stroke="#ffffff" y1="50" x2="500" y2="583"></line>
+<line x1="550" stroke-width="2px" stroke="#ffffff" y1="50" x2="550" y2="583"></line>
+<line x1="600" stroke-width="1px" stroke="#ffffff" y1="50" x2="600" y2="583"></line>
+<line x1="650" stroke-width="2px" stroke="#ffffff" y1="50" x2="650" y2="583"></line>
+<line x1="700" stroke-width="1px" stroke="#ffffff" y1="50" x2="700" y2="583"></line>
+<line x1="750" stroke-width="2px" stroke="#ffffff" y1="50" x2="750" y2="583"></line>
+<line x1="800" stroke-width="1px" stroke="#ffffff" y1="50" x2="800" y2="583"></line>
+<line x1="850" stroke-width="2px" stroke="#ffffff" y1="50" x2="850" y2="583"></line>
+<line x1="900" stroke-width="1px" stroke="#ffffff" y1="50" x2="900" y2="583"></line>
+<line x1="950" stroke-width="2px" stroke="#ffffff" y1="50" x2="950" y2="583"></line>
+<line x1="1000" stroke-width="1px" stroke="#ffffff" y1="50" x2="1000" y2="583"></line>
+<line x1="1050" stroke-width="2px" stroke="#ffffff" y1="50" x2="1050" y2="583"></line>
+<line x1="1100" stroke-width="1px" stroke="#ffffff" y1="50" x2="1100" y2="583"></line>
+</svg>

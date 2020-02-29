@@ -93,24 +93,6 @@ d3.csv("rushers_500.csv")
         .get(function(error,data) {
 
         var allPlayers = d3.map(data, function(d){return(d.Name)}).keys();
-
-        d3.select("#selectButton")
-        .selectAll('myOptions')
-        .data(allPlayers)
-        .enter().append('option')
-        .text(function (d) { return d; }) // text showed in the menu
-        .attr("value", function (d) { return d; }); // corresponding value returned by the button
-
-        var line = d3.select("#field").selectAll('.vector')
-		.data(data.filter(function(d){ return d.Name == allPlayers[0]; }))
-		.enter().append('line')
-		.attr('class', 'vector')
-        .attr("x1", function(d){ return (d.x1*10)+50;} )
-        .attr("y1", function(d){ return (d.y1*10)+50;} )
-        .attr("x2", function(d){ return (d.x2*10)+50; })
-        .attr("y2", function(d){ return (d.y2*10)+50; })
-        .attr("stroke", "blue")
-        .attr("stroke-width", function(d) { return (d.Speed * 50); });
 		
        // .transition()
      //   .duration(5000)
@@ -136,6 +118,8 @@ d3.csv("rushers_500.csv")
         .attr("y2", function(d){ return (d.y2*10)+50; })
         .attr("stroke", "blue")
         .attr("stroke-width", function(d) { return (d.Speed * 50); });
+		
+		console.log(d3.select("#field").selectAll('.vector'));
 		
       // // Give these new data to update line
       //   holder.selectAll("line")
