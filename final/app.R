@@ -106,8 +106,8 @@ ui <- dashboardPage(
                 fluidRow(box(width = 6,
                              title = "Select Filters",
                              color = "blue", ribbon = TRUE,title_side = "top left",
-                             selectInput("team","Select Team:",choices = teams_values,selected = "ARZ"),
-                             sliderInput("season","Select Season:",2017,2019,value=c(2017,2019)),
+                             selectInput("rush_team","Select Team:",choices = teams_values,selected = "ARZ"),
+                             sliderInput("rush_season","Select Season:",2017,2019,value=c(2017,2019)),
                              selectInput("player","Select RB:",choices = c("All",player_values),selected = "All")
                             )
                     ),
@@ -226,19 +226,22 @@ server <- shinyServer(function(input, output, session) {
     
 
     relev_runs <- nfl_runs %>% filter(dplyr::between(X1,0,120) & dplyr::between(Y1,0,53.3))
-    field_agg <- reactive({
+    
+	field_agg <- reactive({
         if(input$player!="All"){
-            field_plot <- relev_runs %>% filter(PossessionTeam %in% input$team & DisplayName %in% input$player 
-                                                & dplyr::between(Season,input$season[1],input$season[2]))
+            field_plot <- relev_runs %>% filter((PossessionTeam %in% input$rush_team) & DisplayName %in% input$player 
+                                                & dplyr::between(Season,input$rush_season[1],input$rush_season[2]))
         } else{
-            field_plot <- relev_runs %>% filter(PossessionTeam %in% input$team 
-                                                & dplyr::between(Season,input$season[1],input$season[2]))
+            field_plot <- relev_runs %>% filter((PossessionTeam %in% input$rush_team)
+                                                & (dplyr::between(Season,input$rush_season[1],input$rush_season[2])))
         }
+		field_plot
     })
     
     dat <- reactive({
         field_agg() %>% select(DisplayName,PossessionTeam,Season,X,Y,X1,Y1,speed_mph)
     })
+	
     #Field:
     Rlogo <- readPicture("field-cairo.svg")
     RlogoSVGgrob <- gTree(children=gList(pictureGrob(Rlogo, ext="gridSVG")))
