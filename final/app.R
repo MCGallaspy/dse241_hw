@@ -34,6 +34,10 @@ player_values <- nfl_runs %>% select(DisplayName) %>% unique() %>% arrange(Displ
 metrics <- c("Acceleration","Speed","Yards")
 calc <- c("Average","Max","Total")
 
+yards <- nfl_runs %>% select(Yards) %>% summarise(min_yards_gained = min(Yards), max_yards_gained = max(Yards))
+min_yards <- yards$min_yards_gained[[1]]
+max_yards <- yards$max_yards_gained[[1]]
+
 ui <- dashboardPage(
     dashboardHeader(title = "Analyzing the NFL Running Back", color = "blue", title_width=400,inverted = TRUE),
     dashboardSidebar(
@@ -83,6 +87,11 @@ ui <- dashboardPage(
             tabItem(
                 tabName = "extra",
                 fluidRow(
+					box(width = 10,
+                        title = "Filters",
+                        color = "green", ribbon = TRUE, title_side = "top right",
+                        sliderInput("yards_gained", "Filter by plays that gained yards:", min_yards, max_yards, value=c(min_yards, max_yards))
+                    ),
                     box(width = 14, height = 10,
                         title = "Speed Across the Field",
                         color = "green", ribbon = TRUE, title_side = "top right",
@@ -184,16 +193,23 @@ server <- shinyServer(function(input, output, session) {
                 geom_bar(stat="identity") + scale_fill_identity() + ylab(input$metric)
         }
     })
-    df <- nfl_runs %>% select(X, Y, speed_mph) %>%
-        mutate(xbin=ntile(X, 100), ybin=ntile(Y, 53)) %>%
-        group_by(xbin, ybin) %>%
-        summarise(
-            mean_speed = mean(speed_mph)
-        )
-    mean_speed <- pivot_wider(df, names_from=xbin, values_from=mean_speed)
+    
+	df <- reactive({
+	    result <- nfl_runs %>% 
+			filter(Yards >= input$yards_gained[[1]]) %>%
+	        filter(Yards <= input$yards_gained[[2]]) %>%
+			select(X, Y, speed_mph) %>%
+			mutate(xbin=ntile(X, 20), ybin=ntile(Y, 10)) %>%
+			group_by(xbin, ybin) %>%
+			summarise(
+				mean_speed = mean(speed_mph)
+			)
+		#print(dim(result))
+		result
+	})
     
     output$field1 <- renderPlot({
-        ggplot(df, aes(x=xbin, y=ybin, fill=mean_speed)) +
+	    ggplot(df(), aes(x=xbin, y=ybin, fill=mean_speed)) +
             geom_tile() + scale_fill_distiller(palette = "RdYlGn") +
             theme(
                 panel.background = element_rect(fill = "transparent"), # bg of the panel
