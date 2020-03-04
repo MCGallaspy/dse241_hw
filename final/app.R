@@ -38,6 +38,9 @@ yards <- nfl_runs %>% select(Yards) %>% summarise(min_yards_gained = min(Yards),
 min_yards <- yards$min_yards_gained[[1]]
 max_yards <- yards$max_yards_gained[[1]]
 
+heatmap_metrics <- c("Yards", "speed_mph", "acc_mph", "Dir", "Orientation")
+heatmap_aggs <- c("mean", "median", "max")
+
 ui <- dashboardPage(
     dashboardHeader(title = "Analyzing the NFL Running Back", color = "blue", title_width=400,inverted = TRUE),
     dashboardSidebar(
@@ -95,7 +98,8 @@ ui <- dashboardPage(
 					box(width = 5,
                         title = "Metrics",
                         color = "green", ribbon = TRUE, title_side = "top right",
-                        selectInput("heatmap_metric", "Select metric:", choices=calc, selected="Speed")
+                        selectInput("heatmap_metric", "Select metric:", choices=heatmap_metrics, selected="speed_mph"),
+						selectInput("heatmap_agg", "Select aggregation:", choices=heatmap_aggs, selected="mean")
                     ),
                     box(width = 14, height = 10,
                         title = "Selected metric Across the Field",
@@ -200,21 +204,37 @@ server <- shinyServer(function(input, output, session) {
     })
     
 	df <- reactive({
+		
 	    result <- nfl_runs %>% 
 			filter(Yards >= input$yards_gained[[1]]) %>%
 	        filter(Yards <= input$yards_gained[[2]]) %>%
-			select(X, Y, speed_mph) %>%
+			select(X, Y, !!sym(input$heatmap_metric)) %>%
 			mutate(xbin=ntile(X, 20), ybin=ntile(Y, 10)) %>%
-			group_by(xbin, ybin) %>%
-			summarise(
-				mean_speed = mean(speed_mph)
+			group_by(xbin, ybin)
+		
+		if (input$heatmap_agg == "mean")
+		{
+			result <- result %>% summarise(
+				value = mean(!!sym(input$heatmap_metric))
 			)
-		#print(dim(result))
+		}
+		else if (input$heatmap_agg == "max")
+		{
+			result <- result %>% summarise(
+				value = max(!!sym(input$heatmap_metric))
+			)
+		}
+		else if (input$heatmap_agg == "median")
+		{
+			result <- result %>% summarise(
+				value = median(!!sym(input$heatmap_metric))
+			)
+		}
 		result
 	})
     
     output$field1 <- renderPlot({
-	    ggplot(df(), aes(x=xbin, y=ybin, fill=mean_speed)) +
+	    ggplot(df(), aes(x=xbin, y=ybin, fill=value)) +
             geom_tile() + scale_fill_distiller(palette = "RdYlGn") +
             theme(
                 panel.background = element_rect(fill = "transparent"), # bg of the panel
@@ -226,7 +246,7 @@ server <- shinyServer(function(input, output, session) {
                 axis.line=element_blank(),axis.text.x=element_blank(),
                 axis.text.y=element_blank(),
                 axis.ticks=element_blank(), legend.position = "top"
-            ) + xlab("") + ylab("") + labs(fill="Avg. Speed")
+            ) + xlab("") + ylab("") + labs(fill=input$heatmap_metric)
     })
     
 
