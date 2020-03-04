@@ -87,13 +87,18 @@ ui <- dashboardPage(
             tabItem(
                 tabName = "extra",
                 fluidRow(
-					box(width = 10,
-                        title = "Filters",
+					box(width = 5,
+                        title = "Yards gained",
                         color = "green", ribbon = TRUE, title_side = "top right",
                         sliderInput("yards_gained", "Filter by plays that gained yards:", min_yards, max_yards, value=c(min_yards, max_yards))
                     ),
+					box(width = 5,
+                        title = "Metrics",
+                        color = "green", ribbon = TRUE, title_side = "top right",
+                        selectInput("heatmap_metric", "Select metric:", choices=calc, selected="Speed")
+                    ),
                     box(width = 14, height = 10,
-                        title = "Speed Across the Field",
+                        title = "Selected metric Across the Field",
                         color = "green", ribbon = TRUE, title_side = "top right",
                         column(width = 10,
                             plotOutput("field1")
@@ -127,55 +132,55 @@ ui <- dashboardPage(
 server <- shinyServer(function(input, output, session) {
     
     plot_agg <- reactive({
-        if(input$metric=='Yards'){
+        print(input$team)
+		print(input$team == "All")
+		if(input$metric=='Yards'){
             var = "Yards"
         } else if(input$metric=='Acceleration'){
             var = "acc_mph"
         } else{
             var = "speed_mph"
         }
+		
+		plot_data <- nfl_runs %>% filter(dplyr::between(Season,input$season[1],input$season[2]) & 
+										 dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
+		
         if(input$cut!="None"){
             if(input$team!="All"){
-                plot_data <- nfl_runs %>%
-                    filter(PossessionTeam==input$team & dplyr::between(Season,input$season[1],input$season[2]) & 
-                               dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
+                plot_data <- plot_data %>% filter(PossessionTeam %in% input$team)
             }
             if(input$off!="All"){
-                plot_data <- nfl_runs %>%
-                    filter(OffenseFormation==input$off & dplyr::between(Season,input$season[1],input$season[2]) & 
-                               dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
+                plot_data <- plot_data %>% filter(OffenseFormation %in% input$off)
             }
             
             if(input$calc=="Average"){
-                plot_data <- nfl_runs %>% group_by_at(vars(PossessionTeam,input$cut)) %>% summarise(metric = mean(!!sym(var))) %>%
+                plot_data <- plot_data %>% group_by_at(vars(PossessionTeam,input$cut)) %>% summarise(metric = mean(!!sym(var))) %>%
                     left_join(.,teams,by=c("PossessionTeam"="teams"))
             } else if(input$calc=="Max"){
-                plot_data <- nfl_runs %>% group_by_at(vars(PossessionTeam,input$cut)) %>% summarise(metric = max(!!sym(var))) %>%
+                plot_data <- plot_data %>% group_by_at(vars(PossessionTeam,input$cut)) %>% summarise(metric = max(!!sym(var))) %>%
                     left_join(.,teams,by=c("PossessionTeam"="teams"))
             } else{
-                plot_data <- nfl_runs %>% group_by_at(vars(PossessionTeam,input$cut)) %>% summarise(metric = sum(!!sym(var))) %>%
+                plot_data <- plot_data %>% group_by_at(vars(PossessionTeam,input$cut)) %>% summarise(metric = sum(!!sym(var))) %>%
                     left_join(.,teams,by=c("PossessionTeam"="teams"))
             }
         } else{
             if(input$team!="All"){
-                plot_data <- nfl_runs %>%
-                    filter(PossessionTeam==input$team & dplyr::between(Season,input$season[1],input$season[2]) & 
-                               dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
+                plot_data <- plot_data %>%
+                    filter(PossessionTeam %in% input$team)
             }
             if(input$off!="All"){
-                plot_data <- nfl_runs %>%
-                    filter(OffenseFormation==input$off & dplyr::between(Season,input$season[1],input$season[2]) & 
-                               dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
+                plot_data <- plot_data%>%
+                    filter(OffenseFormation %in% input$off)
             }
             
             if(input$calc=="Average"){
-                plot_data <- nfl_runs %>% group_by(PossessionTeam) %>% summarise(metric = mean(!!sym(var))) %>%
+                plot_data <- plot_data %>% group_by(PossessionTeam) %>% summarise(metric = mean(!!sym(var))) %>%
                     left_join(.,teams,by=c("PossessionTeam"="teams"))
             } else if(input$calc=="Max"){
-                plot_data <- nfl_runs %>% group_by(PossessionTeam) %>% summarise(metric = max(!!sym(var))) %>%
+                plot_data <- plot_data %>% group_by(PossessionTeam) %>% summarise(metric = max(!!sym(var))) %>%
                     left_join(.,teams,by=c("PossessionTeam"="teams"))
             } else{
-                plot_data <- nfl_runs %>% group_by(PossessionTeam) %>% summarise(metric = sum(!!sym(var))) %>%
+                plot_data <- plot_data %>% group_by(PossessionTeam) %>% summarise(metric = sum(!!sym(var))) %>%
                     left_join(.,teams,by=c("PossessionTeam"="teams"))
             }
         }
@@ -184,7 +189,7 @@ server <- shinyServer(function(input, output, session) {
     colscale <- c(semantic_palette[["red"]], semantic_palette[["green"]], semantic_palette[["blue"]])
     mtcars$am <- factor(mtcars$am,levels=c(0,1),
                         labels=c("Automatic","Manual"))
-    output$plot1 <- output$plot1 <- renderPlot({
+    output$plot1 <- renderPlot({
         if(ncol(plot_agg())>13){
             ggplot(plot_agg(),aes_string(x="PossessionTeam",y="metric",fill=colnames(plot_agg())[2],color="primary")) + scale_fill_distiller() + 
                 geom_bar(stat="identity",position = position_dodge(width = 0.5))+ ylab('Blah') + scale_color_identity() + ylab(input$metric)
