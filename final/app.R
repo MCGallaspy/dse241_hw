@@ -19,7 +19,7 @@ r_csv2 <- function(X.file_path) {
 cuts <- c("Season","Down")
 
 ### NFL DATA ###
-nfl_runs <- r_csv2("./rushers_lines.csv") # Read in Rushes CSV from Python Output
+nfl_runs <- r_csv2("./data/rushers_lines.csv") # Read in Rushes CSV from Python Output
 nfl_runs <- nfl_runs %>% filter(Position%in%c('RB','HB')) %>%
     mutate(speed_mph = round((S*60^2)/1760,1),acc_mph = round((A*60^2)/1760,1))# only care about RB/HB, translate speed and acc to MPH
 teams <- nfl_runs %>% select(PossessionTeam) %>% unique() %>% arrange(PossessionTeam) %>% pull() # Get team list, alpha sort
@@ -268,7 +268,7 @@ server <- shinyServer(function(input, output, session) {
     })
 	
     #Field:
-    Rlogo <- readPicture("field-cairo.svg")
+    Rlogo <- readPicture("data/field-cairo.svg")
     RlogoSVGgrob <- gTree(children=gList(pictureGrob(Rlogo, ext="gridSVG")))
     output$field2 <- renderPlot({
         ggplot(dat(),aes(x=X,y=Y,color=DisplayName)) + annotation_custom(RlogoSVGgrob,xmin=-17, xmax=127, ymin=-5, ymax=64) + geom_point(size=2,show.legend = FALSE) + 
