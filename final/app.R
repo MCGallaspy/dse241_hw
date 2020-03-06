@@ -38,7 +38,7 @@ yards <- nfl_runs %>% select(Yards) %>% summarise(min_yards_gained = min(Yards),
 min_yards <- yards$min_yards_gained[[1]]
 max_yards <- yards$max_yards_gained[[1]]
 
-heatmap_metrics <- c("Yards", "speed_mph", "acc_mph", "Dir", "Orientation")
+heatmap_metrics <- c("Yards", "speed_mph", "acc_mph", "Dir")
 heatmap_aggs <- c("mean", "median", "max")
 
 ui <- dashboardPage(
@@ -136,8 +136,6 @@ ui <- dashboardPage(
 server <- shinyServer(function(input, output, session) {
     
     plot_agg <- reactive({
-        print(input$team)
-		print(input$team == "All")
 		if(input$metric=='Yards'){
             var = "Yards"
         } else if(input$metric=='Acceleration'){
@@ -234,8 +232,20 @@ server <- shinyServer(function(input, output, session) {
 	})
     
     output$field1 <- renderPlot({
-	    ggplot(df(), aes(x=xbin, y=ybin, fill=value)) +
-            geom_tile() + scale_fill_distiller(palette = "RdYlGn") +
+		if (input$heatmap_metric %in% c('Dir'))
+		{
+		  pi <- 3.14159
+		  angle <- df()$value - 90.
+		  angle <- -1. * angle
+		  angle <- angle * pi / 180.
+			base_plot <- ggplot(df(), aes(x=xbin, y=ybin, fill=value, angle=angle, radius=0.5)) + 
+			  geom_tile() + geom_spoke(arrow=arrow(length=unit(.05, 'inches')))
+		}
+		else
+		{
+			base_plot <- ggplot(df(), aes(x=xbin, y=ybin, fill=value)) + geom_tile()
+		}
+	    base_plot + scale_fill_distiller(palette = "RdYlGn") +
             theme(
                 panel.background = element_rect(fill = "transparent"), # bg of the panel
                 plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
