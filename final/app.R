@@ -99,8 +99,14 @@ ui <- dashboardPage(
                         title = "Metrics",
                         color = "green", ribbon = TRUE, title_side = "top right",
                         selectInput("heatmap_metric", "Select metric:", choices=heatmap_metrics, selected="speed_mph"),
-						selectInput("heatmap_agg", "Select aggregation:", choices=heatmap_aggs, selected="mean")
+						            selectInput("heatmap_agg", "Select aggregation:", choices=heatmap_aggs, selected="mean")
                     ),
+					box(width = 5,
+					    title = "Aggregation factor",
+					    color = "green", ribbon = TRUE, title_side = "top right",
+					    numericInput("heatman_hbins", "Num horizontal bins:", 100, min=1),
+					    numericInput("heatman_vbins", "Num vertical bins:", 53, min=1)
+					  ),
                     box(width = 14, height = 10,
                         title = "Selected metric Across the Field",
                         color = "green", ribbon = TRUE, title_side = "top right",
@@ -207,7 +213,7 @@ server <- shinyServer(function(input, output, session) {
 			filter(Yards >= input$yards_gained[[1]]) %>%
 	        filter(Yards <= input$yards_gained[[2]]) %>%
 			select(X, Y, !!sym(input$heatmap_metric)) %>%
-			mutate(xbin=ntile(X, 20), ybin=ntile(Y, 10)) %>%
+			mutate(xbin=ntile(X, input$heatman_hbins), ybin=ntile(Y, input$heatman_vbins)) %>%
 			group_by(xbin, ybin)
 		
 		if (input$heatmap_agg == "mean")
