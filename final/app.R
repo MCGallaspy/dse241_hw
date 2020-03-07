@@ -38,8 +38,8 @@ yards <- nfl_runs %>% select(Yards) %>% summarise(min_yards_gained = min(Yards),
 min_yards <- yards$min_yards_gained[[1]]
 max_yards <- yards$max_yards_gained[[1]]
 
-heatmap_metrics <- c("Yards", "speed_mph", "acc_mph", "Dir")
-heatmap_aggs <- c("mean", "median", "max")
+heatmap_metrics <- c("Yards", "Speed", "Acceleration", "Direction")
+heatmap_aggs <- c("Average", "Median", "Max")
 
 ui <- dashboardPage(
     dashboardHeader(title = "Analyzing the NFL Running Back", color = "blue", title_width=400,inverted = TRUE),
@@ -62,7 +62,7 @@ ui <- dashboardPage(
                         color = "blue", ribbon = TRUE,title_side = "top left",
                         selectInput("cut","Select Cut:",choices = c("None",cuts),selected = "None"),
                         selectInput("metric","Select Metric",choices = metrics,selected = "Yards")
-                        ),
+                    ),
                     box(width = 6,
                         title = "Select Filters",
                         color = "blue", ribbon = TRUE,title_side = "top left",
@@ -90,28 +90,28 @@ ui <- dashboardPage(
             tabItem(
                 tabName = "extra",
                 fluidRow(
-					box(width = 5,
+                    box(width = 5,
                         title = "Yards gained",
                         color = "green", ribbon = TRUE, title_side = "top right",
                         sliderInput("yards_gained", "Filter by plays that gained yards:", min_yards, max_yards, value=c(min_yards, max_yards))
                     ),
-					box(width = 5,
+                    box(width = 5,
                         title = "Metrics",
                         color = "green", ribbon = TRUE, title_side = "top right",
-                        selectInput("heatmap_metric", "Select metric:", choices=heatmap_metrics, selected="speed_mph"),
-						            selectInput("heatmap_agg", "Select aggregation:", choices=heatmap_aggs, selected="mean")
+                        selectInput("heatmap_metric", "Select metric:", choices=heatmap_metrics, selected="Speed"),
+                        selectInput("heatmap_agg", "Select aggregation:", choices=heatmap_aggs, selected="Average")
                     ),
-					box(width = 5,
-					    title = "Aggregation factor",
-					    color = "green", ribbon = TRUE, title_side = "top right",
-					    numericInput("heatman_hbins", "Num horizontal bins:", 100, min=1),
-					    numericInput("heatman_vbins", "Num vertical bins:", 53, min=1)
-					  ),
+                    box(width = 5,
+                        title = "Aggregation factor",
+                        color = "green", ribbon = TRUE, title_side = "top right",
+                        numericInput("heatman_hbins", "Num horizontal bins:", 100, min=1),
+                        numericInput("heatman_vbins", "Num vertical bins:", 53, min=1)
+                    ),
                     box(width = 14, height = 10,
                         title = "Selected metric Across the Field",
                         color = "green", ribbon = TRUE, title_side = "top right",
                         column(width = 10,
-                            plotOutput("field1")
+                               plotOutput("field1")
                         )
                     )
                 )
@@ -124,16 +124,16 @@ ui <- dashboardPage(
                              selectInput("rush_team","Select Team:",choices = teams_values,selected = "ARZ"),
                              sliderInput("rush_season","Select Season:",2017,2019,value=c(2017,2019)),
                              selectInput("player","Select RB:",choices = c("All",player_values),selected = "All")
-                            )
-                    ),
+                )
+                ),
                 fluidRow(box(width=14,height=10,
                              title="Distribution of Runs",
                              color = "green",ribbon = TRUE,title_side = "top right",
                              column(width = 10,
                                     plotOutput("field2")
-                                    )
                              )
-                         )
+                )
+                )
             )
         )
     ), theme = "cerulean"
@@ -142,17 +142,17 @@ ui <- dashboardPage(
 server <- shinyServer(function(input, output, session) {
     
     plot_agg <- reactive({
-		if(input$metric=='Yards'){
+        if(input$metric=='Yards'){
             var = "Yards"
         } else if(input$metric=='Acceleration'){
             var = "acc_mph"
         } else{
             var = "speed_mph"
         }
-		
-		plot_data <- nfl_runs %>% filter(dplyr::between(Season,input$season[1],input$season[2]) & 
-										 dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
-		
+        
+        plot_data <- nfl_runs %>% filter(dplyr::between(Season,input$season[1],input$season[2]) & 
+                                             dplyr::between(DefendersInTheBox,input$def_box[1],input$def_box[2]))
+        
         if(input$cut!="None"){
             if(input$team!="All"){
                 plot_data <- plot_data %>% filter(PossessionTeam %in% input$team)
@@ -207,51 +207,61 @@ server <- shinyServer(function(input, output, session) {
         }
     })
     
-	df <- reactive({
-		
-	    result <- nfl_runs %>% 
-			filter(Yards >= input$yards_gained[[1]]) %>%
-	        filter(Yards <= input$yards_gained[[2]]) %>%
-			select(X, Y, !!sym(input$heatmap_metric)) %>%
-			mutate(xbin=ntile(X, input$heatman_hbins), ybin=ntile(Y, input$heatman_vbins)) %>%
-			group_by(xbin, ybin)
-		
-		if (input$heatmap_agg == "mean")
-		{
-			result <- result %>% summarise(
-				value = mean(!!sym(input$heatmap_metric))
-			)
-		}
-		else if (input$heatmap_agg == "max")
-		{
-			result <- result %>% summarise(
-				value = max(!!sym(input$heatmap_metric))
-			)
-		}
-		else if (input$heatmap_agg == "median")
-		{
-			result <- result %>% summarise(
-				value = median(!!sym(input$heatmap_metric))
-			)
-		}
-		result
-	})
+    df <- reactive({
+        if(input$heatmap_metric=='Yards'){
+            var = "Yards"
+        } else if(input$heatmap_metric=='Acceleration'){
+            var = "acc_mph"
+        } else if(input$heatmap_metric=='Direction'){
+            var = 'Dir'
+        }else{
+            var = "speed_mph"
+        }
+        
+        result <- nfl_runs %>% 
+            filter(Yards >= input$yards_gained[[1]]) %>%
+            filter(Yards <= input$yards_gained[[2]]) %>%
+            select(X, Y, !!sym(var)) %>%
+            mutate(xbin=ntile(X, input$heatman_hbins), ybin=ntile(Y, input$heatman_vbins)) %>%
+            group_by(xbin, ybin)
+        
+        if (input$heatmap_agg == "Average")
+        {
+            result <- result %>% summarise(
+                value = mean(!!sym(var))
+            )
+        }
+        else if (input$heatmap_agg == "Max")
+        {
+            result <- result %>% summarise(
+                value = max(!!sym(var))
+            )
+        }
+        else if (input$heatmap_agg == "Median")
+        {
+            result <- result %>% summarise(
+                value = median(!!sym(var))
+            )
+        }
+        result
+    })
     
     output$field1 <- renderPlot({
-		if (input$heatmap_metric %in% c('Dir'))
-		{
-		  pi <- 3.14159
-		  angle <- df()$value - 90.
-		  angle <- -1. * angle
-		  angle <- angle * pi / 180.
-			base_plot <- ggplot(df(), aes(x=xbin, y=ybin, fill=value, angle=angle, radius=0.5)) + 
-			  geom_tile() + geom_spoke(arrow=arrow(length=unit(.05, 'inches')))
-		}
-		else
-		{
-			base_plot <- ggplot(df(), aes(x=xbin, y=ybin, fill=value)) + geom_tile()
-		}
-	    base_plot + scale_fill_distiller(palette = "RdYlGn") +
+        
+        if (input$heatmap_metric %in% c('Direction'))
+        {
+            pi <- 3.14159
+            angle <- df()$value - 90.
+            angle <- -1. * angle
+            angle <- angle * pi / 180.
+            base_plot <- ggplot(df(), aes(x=xbin, y=ybin, fill=value, angle=angle, radius=0.5)) + 
+                geom_tile() + geom_spoke(arrow=arrow(length=unit(.05, 'inches')))
+        }
+        else
+        {
+            base_plot <- ggplot(df(), aes(x=xbin, y=ybin, fill=value)) + geom_tile()
+        }
+        base_plot + scale_fill_distiller(palette = "RdYlGn") +
             theme(
                 panel.background = element_rect(fill = "transparent"), # bg of the panel
                 plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
@@ -265,10 +275,10 @@ server <- shinyServer(function(input, output, session) {
             ) + xlab("") + ylab("") + labs(fill=input$heatmap_metric)
     })
     
-
+    
     relev_runs <- nfl_runs %>% filter(dplyr::between(X1,0,120) & dplyr::between(Y1,0,53.3))
     
-	field_agg <- reactive({
+    field_agg <- reactive({
         if(input$player!="All"){
             field_plot <- relev_runs %>% filter((PossessionTeam %in% input$rush_team) & DisplayName %in% input$player 
                                                 & dplyr::between(Season,input$rush_season[1],input$rush_season[2]))
@@ -276,29 +286,29 @@ server <- shinyServer(function(input, output, session) {
             field_plot <- relev_runs %>% filter((PossessionTeam %in% input$rush_team)
                                                 & (dplyr::between(Season,input$rush_season[1],input$rush_season[2])))
         }
-		field_plot
+        field_plot
     })
     
     dat <- reactive({
         field_agg() %>% select(DisplayName,PossessionTeam,Season,X,Y,X1,Y1,speed_mph)
     })
-	
+    
     #Field:
-    Rlogo <- readPicture("data/field-cairo.svg")
+    Rlogo <- readPicture("./data/field-cairo.svg")
     RlogoSVGgrob <- gTree(children=gList(pictureGrob(Rlogo, ext="gridSVG")))
     output$field2 <- renderPlot({
         ggplot(dat(),aes(x=X,y=Y,color=DisplayName)) + annotation_custom(RlogoSVGgrob,xmin=-17, xmax=127, ymin=-5, ymax=64) + geom_point(size=2,show.legend = FALSE) + 
-        geom_segment(aes(x = X, y = Y, xend = X1, yend = Y1, colour = DisplayName,size=(speed_mph)),arrow = arrow(length = unit(0.02, "npc"))) + scale_size_continuous("Speed",range=c(0,2)) + theme(
-            panel.background = element_rect(fill = "transparent"), # bg of the panel
-            plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
-            panel.grid.major = element_blank(), # get rid of major grid
-            panel.grid.minor = element_blank(), # get rid of minor grid
-            legend.background = element_rect(fill = "transparent"), # get rid of legend bg
-            legend.box.background = element_rect(fill = "transparent"), # get rid of legend panel bg, 
-            axis.line=element_blank(),axis.text.x=element_blank(),
-            axis.text.y=element_blank(),
-            axis.ticks=element_blank(), legend.position = "top"
-        ) + xlab("") + ylab("") 
+            geom_segment(aes(x = X, y = Y, xend = X1, yend = Y1, colour = DisplayName,size=(speed_mph)),arrow = arrow(length = unit(0.02, "npc"))) + scale_size_continuous("Speed",range=c(0,2)) + theme(
+                panel.background = element_rect(fill = "transparent"), # bg of the panel
+                plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+                panel.grid.major = element_blank(), # get rid of major grid
+                panel.grid.minor = element_blank(), # get rid of minor grid
+                legend.background = element_rect(fill = "transparent"), # get rid of legend bg
+                legend.box.background = element_rect(fill = "transparent"), # get rid of legend panel bg, 
+                axis.line=element_blank(),axis.text.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks=element_blank(), legend.position = "top"
+            ) + xlab("") + ylab("") 
     })
 })
 
