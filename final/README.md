@@ -15,4 +15,4 @@ To run the visualization yourself:
 When you click the "Run App" button in RStudio (see image below) you should be prompted to install
 all required libraries. The visualization will then run in a new window.
 
-![alt text](https://github.com/MCGallaspy/dse241_hw/tree/master/final/images/rstudio-example.png "Location of 'Run App' button")
+![alt text](https://raw.githubusercontent.com/MCGallaspy/dse241_hw/master/final/images/rstudio-example.png "Location of 'Run App' button")
