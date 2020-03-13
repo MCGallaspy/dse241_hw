@@ -1,22 +1,20 @@
 library(shiny)
 library(semantic.dashboard)
 library(ggplot2)
-library(plotly)
-library(DT)
 library(teamcolors)
 library(dplyr)
 library(tidyr)
 require(grImport2)
 require(grid)
-require(grConvert)
-require(gridSVG)
 
 # Read CSV
 r_csv2 <- function(X.file_path) {
     read.csv(file = X.file_path,header = TRUE,sep = ",",stringsAsFactors = FALSE)
 }
 
-cuts <- c("Season","Down")
+# Set Working Directory:
+# If relative paths do not work, please set this directly to the path of the downloaded app:
+#setwd("/dse241_hw/final/")
 
 ### NFL DATA ###
 nfl_runs <- r_csv2("./data/rushers_lines.csv") # Read in Rushes CSV from Python Output
@@ -33,6 +31,7 @@ offensive_formations <- nfl_runs %>% select(OffenseFormation) %>% unique()
 player_values <- nfl_runs %>% select(DisplayName) %>% unique() %>% arrange(DisplayName)
 metrics <- c("Acceleration","Speed","Yards")
 calc <- c("Average","Max","Total")
+cuts <- c("Season","Down")
 
 yards <- nfl_runs %>% select(Yards) %>% summarise(min_yards_gained = min(Yards), max_yards_gained = max(Yards))
 min_yards <- yards$min_yards_gained[[1]]
@@ -194,16 +193,13 @@ server <- shinyServer(function(input, output, session) {
         }
     })
     
-    colscale <- c(semantic_palette[["red"]], semantic_palette[["green"]], semantic_palette[["blue"]])
-    mtcars$am <- factor(mtcars$am,levels=c(0,1),
-                        labels=c("Automatic","Manual"))
     output$plot1 <- renderPlot({
         if(ncol(plot_agg())>13){
             ggplot(plot_agg(),aes_string(x="PossessionTeam",y="metric",fill=colnames(plot_agg())[2],color="primary")) + scale_fill_distiller() + 
-                geom_bar(stat="identity",position = position_dodge(width = 0.5))+ ylab('Blah') + scale_color_identity() + ylab(input$metric)
+                geom_bar(stat="identity",position = position_dodge(width = 0.5)) + scale_color_identity() + ylab(paste0(input$calc,' ',input$metric)) + xlab("Team")
         } else{
             ggplot(plot_agg(),aes_string(x="PossessionTeam",y="metric",fill="primary")) + 
-                geom_bar(stat="identity") + scale_fill_identity() + ylab(input$metric)
+                geom_bar(stat="identity") + scale_fill_identity() + ylab(paste0(input$calc,' ',input$metric)) + xlab("Team")
         }
     })
     
@@ -272,7 +268,7 @@ server <- shinyServer(function(input, output, session) {
                 axis.line=element_blank(),axis.text.x=element_blank(),
                 axis.text.y=element_blank(),
                 axis.ticks=element_blank(), legend.position = "top"
-            ) + xlab("") + ylab("") + labs(fill=input$heatmap_metric)
+            ) + xlab("") + ylab("") + labs(fill=paste0(input$heatmap_agg,' ',input$heatmap_metric))
     })
     
     
@@ -290,15 +286,15 @@ server <- shinyServer(function(input, output, session) {
     })
     
     dat <- reactive({
-        field_agg() %>% select(DisplayName,PossessionTeam,Season,X,Y,X1,Y1,speed_mph)
+        field_agg() %>% select(Player=DisplayName,PossessionTeam,Season,X,Y,X1,Y1,speed_mph)
     })
     
     #Field:
     Rlogo <- readPicture("./data/field-cairo.svg")
     RlogoSVGgrob <- gTree(children=gList(pictureGrob(Rlogo, ext="gridSVG")))
     output$field2 <- renderPlot({
-        ggplot(dat(),aes(x=X,y=Y,color=DisplayName)) + annotation_custom(RlogoSVGgrob,xmin=-17, xmax=127, ymin=-5, ymax=64) + geom_point(size=2,show.legend = FALSE) + 
-            geom_segment(aes(x = X, y = Y, xend = X1, yend = Y1, colour = DisplayName,size=(speed_mph)),arrow = arrow(length = unit(0.02, "npc"))) + scale_size_continuous("Speed",range=c(0,2)) + theme(
+        ggplot(dat(),aes(x=X,y=Y,color=Player)) + annotation_custom(RlogoSVGgrob,xmin=-16, xmax=134, ymin=-18, ymax=80) + geom_point(size=2,show.legend = FALSE) + xlim(0,120) + ylim(0,53.3) +
+            geom_segment(aes(x = X, y = Y, xend = X1, yend = Y1, colour = Player,size=(speed_mph)),arrow = arrow(length = unit(0.02, "npc"))) + scale_size_continuous("Speed",range=c(0,2)) + theme(
                 panel.background = element_rect(fill = "transparent"), # bg of the panel
                 plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
                 panel.grid.major = element_blank(), # get rid of major grid
